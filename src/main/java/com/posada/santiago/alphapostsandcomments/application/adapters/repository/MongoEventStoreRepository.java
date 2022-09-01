@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
 import java.util.Comparator;
 import java.util.Date;
 
@@ -32,10 +31,11 @@ public class MongoEventStoreRepository implements DomainEventRepository {
                 .sort(Comparator.comparing(event -> event.getStoredEvent().getOccurredOn()))
                 .map(storeEvent -> {
                     try {
-                        return (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(), Class.forName(storeEvent.getStoredEvent().getTypeName()));
+                        return (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(),
+                                Class.forName(storeEvent.getStoredEvent().getTypeName()));
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
-                        throw new IllegalStateException("couldnt find domain event");
+                        throw new IllegalStateException("could not found domain event");
                     }
                 });
     }
@@ -48,11 +48,35 @@ public class MongoEventStoreRepository implements DomainEventRepository {
         return template.save(eventStored)
                 .map(storeEvent -> {
                     try {
-                        return (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(), Class.forName(storeEvent.getStoredEvent().getTypeName()));
+                        return (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(),
+                                Class.forName(storeEvent.getStoredEvent().getTypeName()));
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
-                        throw new IllegalStateException("couldnt find domain event");
+                        throw new IllegalStateException("could not found domain event");
                     }
                 });
     }
+
+    @Override
+    public Mono<Void> deleteEventsByAggregateId(String aggregateId) {
+        Query query = Query.query(Criteria.where("aggregateRootId").is(aggregateId));
+        return Mono.just(template.findAllAndRemove(query, DocumentEventStored.class))
+                .flatMap(Flux::then);
+    }
+
+//    @Override
+//    public Flux<DomainEvent> deleteEventsByAggregateId(String aggregateId) {
+//        var query = new Query(Criteria.where("aggregateRootId").is(aggregateId));
+//        return template.findAllAndRemove(query, DocumentEventStored.class)
+//                .sort(Comparator.comparing(event -> event.getStoredEvent().getOccurredOn()))
+//                .map(storeEvent -> {
+//                    try {
+//                        return (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(),
+//                                Class.forName(storeEvent.getStoredEvent().getTypeName()));
+//                    } catch (ClassNotFoundException e) {
+//                        e.printStackTrace();
+//                        throw new IllegalStateException("could not found domain event");
+//                    }
+//                });
+//    }
 }

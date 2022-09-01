@@ -1,7 +1,5 @@
 package com.posada.santiago.alphapostsandcomments.application.generic.models;
 
-import co.com.sofka.domain.generic.DomainEvent;
-
 import java.util.Date;
 
 public class StoredEvent {
