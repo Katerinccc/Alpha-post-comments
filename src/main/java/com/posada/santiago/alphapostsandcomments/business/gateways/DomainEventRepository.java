@@ -8,7 +8,7 @@ public interface DomainEventRepository {
     Flux<DomainEvent> findById(String aggregateId);
     Mono<DomainEvent> saveEvent(DomainEvent event);
 
-//    Flux<DomainEvent> deleteEventsByAggregateId(String aggregateId);
-Mono<Void> deleteEventsByAggregateId(String aggregateId);
+    Flux<DomainEvent> deleteEventsByAggregateId(String aggregateId);
+
 
 }

@@ -3,6 +3,9 @@ package com.posada.santiago.alphapostsandcomments.application.adapters.repositor
 import com.posada.santiago.alphapostsandcomments.application.generic.models.StoredEvent;
 
 public class DocumentEventStored {
+
+    private String id;
+
     private String aggregateRootId;
 
     private StoredEvent storedEvent;

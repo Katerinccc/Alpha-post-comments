@@ -58,25 +58,17 @@ public class MongoEventStoreRepository implements DomainEventRepository {
     }
 
     @Override
-    public Mono<Void> deleteEventsByAggregateId(String aggregateId) {
+    public Flux<DomainEvent> deleteEventsByAggregateId(String aggregateId) {
         Query query = Query.query(Criteria.where("aggregateRootId").is(aggregateId));
-        return Mono.just(template.findAllAndRemove(query, DocumentEventStored.class))
-                .flatMap(Flux::then);
+        return template.findAllAndRemove(query, DocumentEventStored.class)
+                .map(documentEventStored -> {
+                    try {
+                        return (DomainEvent) gson.fromJson(documentEventStored.getStoredEvent().getEventBody(),
+                                Class.forName(documentEventStored.getStoredEvent().getTypeName()));
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 
-//    @Override
-//    public Flux<DomainEvent> deleteEventsByAggregateId(String aggregateId) {
-//        var query = new Query(Criteria.where("aggregateRootId").is(aggregateId));
-//        return template.findAllAndRemove(query, DocumentEventStored.class)
-//                .sort(Comparator.comparing(event -> event.getStoredEvent().getOccurredOn()))
-//                .map(storeEvent -> {
-//                    try {
-//                        return (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(),
-//                                Class.forName(storeEvent.getStoredEvent().getTypeName()));
-//                    } catch (ClassNotFoundException e) {
-//                        e.printStackTrace();
-//                        throw new IllegalStateException("could not found domain event");
-//                    }
-//                });
-//    }
 }

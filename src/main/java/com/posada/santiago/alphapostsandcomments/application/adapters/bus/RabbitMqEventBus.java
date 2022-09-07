@@ -34,6 +34,7 @@ public class RabbitMqEventBus implements EventBus {
                 event.getClass().getTypeName(),
                 gson.toJson(event)
         );
-        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.GENERAL_ROUTING_KEY, notification.serialize().getBytes());
+        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE, RabbitConfig.GENERAL_ROUTING_KEY,
+                notification.serialize().getBytes());
     }
 }
