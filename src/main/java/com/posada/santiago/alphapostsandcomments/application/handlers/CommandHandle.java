@@ -12,12 +12,10 @@ import com.posada.santiago.alphapostsandcomments.domain.commands.DeletePostComma
 import com.posada.santiago.alphapostsandcomments.domain.commands.UpdatePostTitleCommand;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Mono;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RequestPredicates.DELETE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.PATCH;
@@ -29,7 +27,6 @@ public class CommandHandle {
 
     @Bean
     public RouterFunction<ServerResponse> createPost(CreatePostUseCase useCase){
-
         return route(
                 POST("/create/post").and(accept(MediaType.APPLICATION_JSON)),
                 request -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
@@ -63,25 +60,16 @@ public class CommandHandle {
 
 
     @Bean
-    public RouterFunction<ServerResponse> deletePost(DeletePostUseCase useCase){
-
-        return route(DELETE("/delete/post/{id}").and(accept(MediaType.APPLICATION_JSON)),
-                request -> useCase.apply(request.pathVariable("id"))
-                        .flatMap(s -> ServerResponse.status(HttpStatus.OK)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(s))
-                        .onErrorResume(throwable ->  ServerResponse.notFound().build()));
-
-//        return route(
-//                DELETE("/delete/post").and(accept(MediaType.APPLICATION_JSON)),
-//                request -> ServerResponse
-//                        .ok()
-//                        .contentType(MediaType.APPLICATION_JSON).body()
-//                        .body(BodyInserters.fromPublisher(
-//                                useCase.apply(request.bodyToMono(DeletePostCommand.class)),
-//                                DomainEvent.class)
-//                        )
-//        );
+    public RouterFunction<ServerResponse> deletePost(DeletePostUseCase useCase) {
+        return route(
+                DELETE("/delete/post").and(accept(MediaType.APPLICATION_JSON)),
+                request -> ServerResponse
+                        .ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(BodyInserters.fromPublisher(
+                                useCase.apply(request.bodyToMono(DeletePostCommand.class)),
+                                DomainEvent.class)
+                        )
+        );
     }
-
 }

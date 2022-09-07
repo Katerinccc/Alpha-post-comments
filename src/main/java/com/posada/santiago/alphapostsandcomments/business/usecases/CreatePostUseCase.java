@@ -27,7 +27,10 @@ public class CreatePostUseCase extends UseCaseForCommand<CreatePostCommand> {
     @Override
     public Flux<DomainEvent> apply(Mono<CreatePostCommand> createPostCommandMono) {
         return createPostCommandMono.flatMapIterable(command -> {
-            Post post = new Post(PostId.of(command.getPostId()), new Title(command.getTitle()), new Author(command.getAuthor()));
+            Post post = new Post(PostId.of(command.getPostId()),
+                    new Title(command.getTitle()),
+                    new Author(command.getAuthor())
+            );
             return post.getUncommittedChanges();
         }).flatMap(event ->
                 repository.saveEvent(event).thenReturn(event)).doOnNext(bus::publish);
