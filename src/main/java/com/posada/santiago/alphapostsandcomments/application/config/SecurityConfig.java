@@ -22,16 +22,18 @@ public class SecurityConfig {
                                                 JwtTokenConfig tokenConfig,
                                                 ReactiveAuthenticationManager reactiveAuthenticationManager) {
 
-        final String CREATE_POST = "/create/post";
         final String CREATE_USERS ="/auth/create/**";
+        final String CREATE_POST = "/create/post";
+        final String ADD_COMMENT = "/add/comment";
 
         return httpSecurity.csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authenticationManager(reactiveAuthenticationManager)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange( access -> access
-                        .pathMatchers(CREATE_POST).hasAuthority("ROLE_USER")
                         .pathMatchers(CREATE_USERS).hasAuthority("ROLE_ADMIN")
+                        .pathMatchers(CREATE_POST).hasAuthority("ROLE_USER")
+                        .pathMatchers(ADD_COMMENT).hasAuthority("ROLE_USER")
                         .anyExchange().permitAll()
                 ).addFilterAt(new JwtFilter(tokenConfig), SecurityWebFiltersOrder.HTTP_BASIC)
                 .build();
