@@ -27,7 +27,9 @@ public class AddCommentUseCase extends UseCaseForCommand<AddCommentCommand> {
 
     @Override
     public Flux<DomainEvent> apply(Mono<AddCommentCommand> addCommentCommandMono) {
-        return addCommentCommandMono.flatMapMany(command -> repository.findById(command.getPostId())
+        return addCommentCommandMono
+                .flatMapMany(command -> repository.findById(command.getPostId())
+                .switchIfEmpty(Mono.error(new Throwable("Post id do not exist " + command.getPostId())))
                 .collectList()
                 .flatMapIterable(events -> {
                     Post post = Post.from(PostId.of(command.getPostId()), events);

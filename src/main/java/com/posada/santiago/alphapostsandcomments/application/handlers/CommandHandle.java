@@ -10,12 +10,14 @@ import com.posada.santiago.alphapostsandcomments.domain.commands.AddCommentComma
 import com.posada.santiago.alphapostsandcomments.domain.commands.CreatePostCommand;
 import com.posada.santiago.alphapostsandcomments.domain.commands.DeletePostCommand;
 import com.posada.santiago.alphapostsandcomments.domain.commands.UpdatePostTitleCommand;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Mono;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RequestPredicates.DELETE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.PATCH;
@@ -23,6 +25,7 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
 @Configuration
+@Slf4j
 public class CommandHandle {
 
     @Bean
@@ -40,9 +43,14 @@ public class CommandHandle {
 
         return route(
                 POST("/add/comment").and(accept(MediaType.APPLICATION_JSON)),
-                request -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromPublisher(
-                                useCase.apply(request.bodyToMono(AddCommentCommand.class)), DomainEvent.class))
+                request -> useCase.apply(request.bodyToMono(AddCommentCommand.class))
+                        .collectList()
+                        .flatMap(domainEvents -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(domainEvents))
+                        .onErrorResume(error -> {
+                            log.error(error.getMessage());
+                            return ServerResponse.badRequest().build();
+                        })
         );
     }
 
