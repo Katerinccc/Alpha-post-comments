@@ -8,10 +8,13 @@ import com.posada.santiago.alphapostsandcomments.domain.Post;
 import com.posada.santiago.alphapostsandcomments.domain.commands.UpdatePostTitleCommand;
 import com.posada.santiago.alphapostsandcomments.domain.values.PostId;
 import com.posada.santiago.alphapostsandcomments.domain.values.Title;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+
+@Slf4j
 @Component
 public class UpdatePostTitleUseCase extends UseCaseForCommand<UpdatePostTitleCommand> {
 
@@ -33,6 +36,7 @@ public class UpdatePostTitleUseCase extends UseCaseForCommand<UpdatePostTitleCom
                     return post.getUncommittedChanges();
                 }).map(event -> {
                     bus.publish(event);
+                    log.info(event.toString());
                     return event;
                 }).flatMap(event -> repository.saveEvent(event))
         );

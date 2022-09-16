@@ -1,7 +1,5 @@
 package com.posada.santiago.alphapostsandcomments.application.handlers;
 
-
-import co.com.sofka.domain.generic.DomainEvent;
 import com.posada.santiago.alphapostsandcomments.business.usecases.AddCommentUseCase;
 import com.posada.santiago.alphapostsandcomments.business.usecases.CreatePostUseCase;
 import com.posada.santiago.alphapostsandcomments.business.usecases.DeletePostUseCase;
@@ -14,10 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Mono;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RequestPredicates.DELETE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.PATCH;
@@ -32,9 +28,14 @@ public class CommandHandle {
     public RouterFunction<ServerResponse> createPost(CreatePostUseCase useCase){
         return route(
                 POST("/create/post").and(accept(MediaType.APPLICATION_JSON)),
-                request -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromPublisher(
-                                useCase.apply(request.bodyToMono(CreatePostCommand.class)), DomainEvent.class))
+                request -> useCase.apply(request.bodyToMono(CreatePostCommand.class))
+                        .collectList()
+                        .flatMap(domainEvents -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(domainEvents))
+                        .onErrorResume(error -> {
+                            log.error(error.getMessage());
+                            return ServerResponse.badRequest().build();
+                        })
         );
     }
 
@@ -59,10 +60,14 @@ public class CommandHandle {
 
         return route(
                 PATCH("/post/title").and(accept(MediaType.APPLICATION_JSON)),
-                request -> ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromPublisher(
-                        useCase.apply(request.bodyToMono(UpdatePostTitleCommand.class)), DomainEvent.class))
+                request -> useCase.apply(request.bodyToMono(UpdatePostTitleCommand.class))
+                        .collectList()
+                        .flatMap(domainEvents -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(domainEvents))
+                        .onErrorResume(error -> {
+                            log.error(error.getMessage());
+                            return ServerResponse.badRequest().build();
+                        })
         );
     }
 
@@ -71,13 +76,14 @@ public class CommandHandle {
     public RouterFunction<ServerResponse> deletePost(DeletePostUseCase useCase) {
         return route(
                 DELETE("/delete/post").and(accept(MediaType.APPLICATION_JSON)),
-                request -> ServerResponse
-                        .ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters.fromPublisher(
-                                useCase.apply(request.bodyToMono(DeletePostCommand.class)),
-                                DomainEvent.class)
-                        )
+                request -> useCase.apply(request.bodyToMono(DeletePostCommand.class))
+                        .collectList()
+                        .flatMap(domainEvents -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(domainEvents))
+                        .onErrorResume(error -> {
+                            log.error(error.getMessage());
+                            return ServerResponse.badRequest().build();
+                        })
         );
     }
 }

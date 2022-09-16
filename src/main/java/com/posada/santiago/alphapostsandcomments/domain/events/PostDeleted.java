@@ -8,4 +8,10 @@ public class PostDeleted extends DomainEvent {
         super("posada.santiago.postdeleted");
     }
 
+    @Override
+    public String toString() {
+        return "PostDeleted{" +
+                "id= '" + aggregateRootId() +
+                '}';
+    }
 }

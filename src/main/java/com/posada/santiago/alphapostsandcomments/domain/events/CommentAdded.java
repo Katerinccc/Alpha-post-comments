@@ -27,4 +27,13 @@ public class CommentAdded extends DomainEvent {
     public String getContent() {
         return content;
     }
+
+    @Override
+    public String toString() {
+        return "CommentAdded{" +
+                "id='" + id + '\'' +
+                ", author='" + author + '\'' +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }

@@ -13,6 +13,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
 
 @EnableWebFluxSecurity
 public class SecurityConfig {
@@ -20,7 +21,8 @@ public class SecurityConfig {
     @Bean
     SecurityWebFilterChain springSecurityAccess(ServerHttpSecurity httpSecurity,
                                                 JwtTokenConfig tokenConfig,
-                                                ReactiveAuthenticationManager reactiveAuthenticationManager) {
+                                                ReactiveAuthenticationManager reactiveAuthenticationManager,
+                                                CorsConfigurationSource corsConfigurationSource) {
 
         final String CREATE_USERS ="/auth/create/**";
         final String CREATE_POST = "/create/post";
@@ -28,18 +30,18 @@ public class SecurityConfig {
 
         return httpSecurity.csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .cors().configurationSource(corsConfigurationSource).and()
                 .authenticationManager(reactiveAuthenticationManager)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange( access -> access
                         .pathMatchers(CREATE_USERS).hasAuthority("ROLE_ADMIN")
-                        .pathMatchers(CREATE_POST).hasAuthority("ROLE_USER")
-                        .pathMatchers(ADD_COMMENT).hasAuthority("ROLE_USER")
+                        .pathMatchers(CREATE_POST).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
+                        .pathMatchers(ADD_COMMENT).hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                         .anyExchange().permitAll()
                 ).addFilterAt(new JwtFilter(tokenConfig), SecurityWebFiltersOrder.HTTP_BASIC)
                 .build();
 
     }
-
 
     @Bean
     public ReactiveUserDetailsService userDetailsService(MongoUserRepository repository) {

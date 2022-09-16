@@ -10,10 +10,12 @@ import com.posada.santiago.alphapostsandcomments.domain.values.Author;
 import com.posada.santiago.alphapostsandcomments.domain.values.CommentId;
 import com.posada.santiago.alphapostsandcomments.domain.values.Content;
 import com.posada.santiago.alphapostsandcomments.domain.values.PostId;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class AddCommentUseCase extends UseCaseForCommand<AddCommentCommand> {
 
@@ -29,7 +31,7 @@ public class AddCommentUseCase extends UseCaseForCommand<AddCommentCommand> {
     public Flux<DomainEvent> apply(Mono<AddCommentCommand> addCommentCommandMono) {
         return addCommentCommandMono
                 .flatMapMany(command -> repository.findById(command.getPostId())
-                .switchIfEmpty(Mono.error(new Throwable("Post id do not exist " + command.getPostId())))
+                .switchIfEmpty(Mono.defer(() -> Mono.error(new Throwable("Post id do not exist " + command.getPostId()))))
                 .collectList()
                 .flatMapIterable(events -> {
                     Post post = Post.from(PostId.of(command.getPostId()), events);
@@ -41,7 +43,10 @@ public class AddCommentUseCase extends UseCaseForCommand<AddCommentCommand> {
                 }).map(event -> {
                     bus.publish(event);
                     return event;
-                }).flatMap(event -> repository.saveEvent(event))
+                }).flatMap(event -> {
+                    log.info(event.toString());
+                    return repository.saveEvent(event);
+                })
         );
 
     }

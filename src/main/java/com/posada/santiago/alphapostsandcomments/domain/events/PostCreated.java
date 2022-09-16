@@ -23,4 +23,12 @@ public class PostCreated extends DomainEvent {
     public String getAuthor() {
         return author;
     }
+
+    @Override
+    public String toString() {
+        return "PostCreated{" +
+                "title='" + title + '\'' +
+                ", author='" + author + '\'' +
+                '}';
+    }
 }

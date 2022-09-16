@@ -10,4 +10,11 @@ public class AuthRequest {
     private String userEmail;
     private String password;
 
+    @Override
+    public String toString() {
+        return "AuthRequest{" +
+                "userEmail='" + userEmail + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
 }

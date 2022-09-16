@@ -18,4 +18,11 @@ public class PostTitleUpdated extends DomainEvent {
     public String getTitle() {
         return title;
     }
+
+    @Override
+    public String toString() {
+        return "PostTitleUpdated{" +
+                "title='" + title + '\'' +
+                '}';
+    }
 }

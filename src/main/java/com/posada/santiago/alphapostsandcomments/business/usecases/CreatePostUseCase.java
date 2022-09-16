@@ -9,11 +9,12 @@ import com.posada.santiago.alphapostsandcomments.domain.commands.CreatePostComma
 import com.posada.santiago.alphapostsandcomments.domain.values.Author;
 import com.posada.santiago.alphapostsandcomments.domain.values.PostId;
 import com.posada.santiago.alphapostsandcomments.domain.values.Title;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-
+@Slf4j
 @Component
 public class CreatePostUseCase extends UseCaseForCommand<CreatePostCommand> {
     private final DomainEventRepository repository;
@@ -33,6 +34,12 @@ public class CreatePostUseCase extends UseCaseForCommand<CreatePostCommand> {
             );
             return post.getUncommittedChanges();
         }).flatMap(event ->
-                repository.saveEvent(event).thenReturn(event)).doOnNext(bus::publish);
+                repository.saveEvent(event)
+                        .switchIfEmpty(Mono.defer(() -> Mono.error(new Throwable("The post could not be created."))))
+                        .thenReturn(event))
+                .doOnNext(returnedEvent-> {
+                   bus.publish(returnedEvent);
+                   log.info(returnedEvent.toString());
+                });
     }
 }
