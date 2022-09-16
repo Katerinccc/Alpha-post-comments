@@ -14,6 +14,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
+
+import java.util.Arrays;
+
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RequestPredicates.DELETE;
 import static org.springframework.web.reactive.function.server.RequestPredicates.PATCH;
@@ -34,6 +37,7 @@ public class CommandHandle {
                                 .bodyValue(domainEvents))
                         .onErrorResume(error -> {
                             log.error(error.getMessage());
+                            log.error(Arrays.toString(error.getStackTrace()));
                             return ServerResponse.badRequest().build();
                         })
         );
@@ -70,7 +74,6 @@ public class CommandHandle {
                         })
         );
     }
-
 
     @Bean
     public RouterFunction<ServerResponse> deletePost(DeletePostUseCase useCase) {

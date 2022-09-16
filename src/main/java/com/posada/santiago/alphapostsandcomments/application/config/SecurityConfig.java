@@ -28,10 +28,10 @@ public class SecurityConfig {
         final String CREATE_POST = "/create/post";
         final String ADD_COMMENT = "/add/comment";
 
-        return httpSecurity.csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .cors().configurationSource(corsConfigurationSource).and()
+        return httpSecurity.csrf().disable()
+                .httpBasic().disable()
                 .authenticationManager(reactiveAuthenticationManager)
+                .cors().configurationSource(corsConfigurationSource).and()
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange( access -> access
                         .pathMatchers(CREATE_USERS).hasAuthority("ROLE_ADMIN")

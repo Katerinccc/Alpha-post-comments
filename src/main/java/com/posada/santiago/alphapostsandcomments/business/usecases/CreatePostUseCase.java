@@ -27,6 +27,7 @@ public class CreatePostUseCase extends UseCaseForCommand<CreatePostCommand> {
 
     @Override
     public Flux<DomainEvent> apply(Mono<CreatePostCommand> createPostCommandMono) {
+        log.info("Create post process initialized..");
         return createPostCommandMono.flatMapIterable(command -> {
             Post post = new Post(PostId.of(command.getPostId()),
                     new Title(command.getTitle()),

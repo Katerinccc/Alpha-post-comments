@@ -29,6 +29,7 @@ public class AddCommentUseCase extends UseCaseForCommand<AddCommentCommand> {
 
     @Override
     public Flux<DomainEvent> apply(Mono<AddCommentCommand> addCommentCommandMono) {
+        log.info("Add comment process initialized..");
         return addCommentCommandMono
                 .flatMapMany(command -> repository.findById(command.getPostId())
                 .switchIfEmpty(Mono.defer(() -> Mono.error(new Throwable("Post id do not exist " + command.getPostId()))))

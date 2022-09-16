@@ -4,6 +4,7 @@ import co.com.sofka.domain.generic.DomainEvent;
 import com.google.gson.Gson;
 import com.posada.santiago.alphapostsandcomments.application.generic.models.StoredEvent;
 import com.posada.santiago.alphapostsandcomments.business.gateways.DomainEventRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -13,6 +14,7 @@ import reactor.core.publisher.Mono;
 import java.util.Comparator;
 import java.util.Date;
 
+@Slf4j
 @Repository
 public class MongoEventStoreRepository implements DomainEventRepository {
 
@@ -31,10 +33,12 @@ public class MongoEventStoreRepository implements DomainEventRepository {
                 .sort(Comparator.comparing(event -> event.getStoredEvent().getOccurredOn()))
                 .map(storeEvent -> {
                     try {
-                        return (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(),
+                        var returnEvent = (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(),
                                 Class.forName(storeEvent.getStoredEvent().getTypeName()));
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
+                        log.info("Find by id returned event:" + returnEvent);
+                        return returnEvent;
+                    } catch (ClassNotFoundException exception) {
+                        exception.printStackTrace();
                         throw new IllegalStateException("could not found domain event");
                     }
                 });
@@ -48,8 +52,10 @@ public class MongoEventStoreRepository implements DomainEventRepository {
         return template.save(eventStored)
                 .map(storeEvent -> {
                     try {
-                        return (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(),
+                        var returnEvent =  (DomainEvent) gson.fromJson(storeEvent.getStoredEvent().getEventBody(),
                                 Class.forName(storeEvent.getStoredEvent().getTypeName()));
+                        log.info("Save event returned :" + returnEvent);
+                        return returnEvent;
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
                         throw new IllegalStateException("could not found domain event");
@@ -63,8 +69,10 @@ public class MongoEventStoreRepository implements DomainEventRepository {
         return template.findAllAndRemove(query, DocumentEventStored.class)
                 .map(documentEventStored -> {
                     try {
-                        return (DomainEvent) gson.fromJson(documentEventStored.getStoredEvent().getEventBody(),
+                        var returnEvent =  (DomainEvent) gson.fromJson(documentEventStored.getStoredEvent().getEventBody(),
                                 Class.forName(documentEventStored.getStoredEvent().getTypeName()));
+                        log.info("Delete by id event returned:" + returnEvent);
+                        return returnEvent;
                     } catch (ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }
